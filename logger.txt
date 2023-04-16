@@ -1,0 +1,12 @@
+-- 18/04/2023 --
+
+Optimize the code for low performance devices:
+    - Use a lower-precision data type: By default, numpy arrays use the float64 data type, which can be quite memory-intensive. For low-performance devices, it might be worth considering using a lower-precision data type like float32 or even float16 (if your device supports it).
+    - Optimize memory usage: The current implementation of the Tensor class can be quite memory-intensive, especially if you're working with large arrays. One way to optimize memory usage is to use numpy's memmap functionality, which allows you to work with arrays that are too large to fit into memory all at once.
+    - Reduce unnecessary computations: In the current implementation of the Tensor class, gradients are always computed, even if requires_grad is set to False. To optimize for low-performance devices, you could modify the backward method to only compute gradients when requires_grad is True.
+
+Added new methods to the Tensor:
+    - Support for element-wise division (__truediv__): This would allow you to divide one tensor by another tensor or a scalar.
+    - Support for matrix multiplication (__matmul__): This would allow you to perform matrix multiplication between two tensors.
+    - Support for exponentiation (__pow__): This would allow you to raise a tensor to a power.
+    - Support for broadcasting: This would allow you to perform operations between tensors with different shapes by automatically broadcasting the tensors to a common shape.

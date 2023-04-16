@@ -1,9 +1,8 @@
 import numpy as np
 
-
 class Tensor:
-    def __init__(self, data, requires_grad=False):
-        self.data = data
+    def __init__(self, data, requires_grad=False, dtype=np.float32):
+        self.data = np.array(data, dtype=dtype)
         self.requires_grad = requires_grad
         self.grad = None
         self._grad_fn = None
@@ -17,7 +16,7 @@ class Tensor:
             return
 
         if grad is None:
-            grad = self.__class__(np.ones_like(self.data))
+            grad = np.ones_like(self.data, dtype=self.data.dtype)
 
         if self.grad is None:
             self.grad = grad
@@ -32,16 +31,44 @@ class Tensor:
 
     def __add__(self, other):
         if isinstance(other, (int, float)):
-            other = self.__class__(np.array(other))
-        return self.__class__(self.data + other.data, requires_grad=self.requires_grad or other.requires_grad)
+            other = np.array(other, dtype=self.data.dtype)
+        return Tensor(np.add(self.data, other.data), requires_grad=self.requires_grad or other.requires_grad)
 
     def __mul__(self, other):
         if isinstance(other, (int, float)):
-            other = self.__class__(np.array(other))
-        return self.__class__(self.data * other.data, requires_grad=self.requires_grad or other.requires_grad)
+            other = np.array(other, dtype=self.data.dtype)
+        return Tensor(np.multiply(self.data, other.data), requires_grad=self.requires_grad or other.requires_grad)
 
     def sum(self, axis=None):
-        return self.__class__(self.data.sum(axis=axis), requires_grad=self.requires_grad)
+        return Tensor(np.sum(self.data, axis=axis, dtype=self.data.dtype), requires_grad=self.requires_grad)
 
     def mean(self, axis=None):
-        return self.__class__(self.data.mean(axis=axis), requires_grad=self.requires_grad)
+        return Tensor(np.mean(self.data, axis=axis, dtype=self.data.dtype), requires_grad=self.requires_grad)
+    
+    def __truediv__(self, other):
+        if isinstance(other, (int, float)):
+            other = np.array(other, dtype=self.data.dtype)
+        return Tensor(np.divide(self.data, other.data), requires_grad=self.requires_grad or other.requires_grad)
+    
+    def __matmul__(self, other):
+        if isinstance(other, (int, float)):
+            other = np.array(other, dtype=self.data.dtype)
+        return Tensor(np.matmul(self.data, other.data), requires_grad=self.requires_grad or other.requires_grad)
+    
+    def __pow__(self, other):
+        if isinstance(other, (int, float)):
+            other = np.array(other, dtype=self.data.dtype)
+        return Tensor(np.power(self.data, other.data), requires_grad=self.requires_grad or other.requires_grad)
+    
+    def broadcast_to(self, shape):
+        if self.shape == shape:
+            return self
+        if len(shape) < len(self.shape):
+            raise ValueError("Shape must have at least as many dimensions as the tensor")
+        diff = len(shape) - len(self.shape)
+        axis = tuple(range(diff)) + tuple([i + diff for i in range(len(self.shape))])
+        return Tensor(np.broadcast_to(self.data, shape), requires_grad=self.requires_grad).transpose(axis)
+
+
+
+
