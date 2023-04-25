@@ -10,3 +10,20 @@ Added new methods to the Tensor:
     - Support for matrix multiplication (__matmul__): This would allow you to perform matrix multiplication between two tensors.
     - Support for exponentiation (__pow__): This would allow you to raise a tensor to a power.
     - Support for broadcasting: This would allow you to perform operations between tensors with different shapes by automatically broadcasting the tensors to a common shape.
+
+
+-- 26/04/2023 --
+
+Optimized the performance:
+    - Vectorized operations: I replaced for loops with vectorized operations wherever possible. This should lead to faster computations.
+    - Data type consistency: I made sure that the data type of the input arrays and scalars is consistent with the data type of the Tensor object. This avoids unnecessary type conversions and should speed up computations.
+    - In-place operations: I used in-place operations (e.g., np.add) instead of creating a new array and copying the result back into the Tensor object. This reduces memory usage and should speed up computations.
+    - Refactoring __repr__: I refactored the __repr__ method to avoid unnecessary string concatenations. This should lead to faster string formatting.
+    - Improving broadcast_to: I improved the broadcast_to method to use NumPy's built-in broadcast_to function. This should lead to faster computations.
+    - Refactoring __getitem__ and __setitem__: I refactored the __getitem__ and __setitem__ methods to use NumPy indexing and assignment, which should be faster than using Python's built-in indexing and assignment.
+    - Added Numba package: Use the `@njit` decorator from the Numba library to speed up the computation of functions that perform element-wise operations on NumPy arrays.
+
+ Added the UnitTest to test the results:
+    - Creation Test : Passed
+    - Arithmetic Operations test: Passed
+    - Gradient Test: To be finished 
