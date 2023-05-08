@@ -37,6 +37,6 @@ w = z * z
 w.backward()
 
 # Print gradients
-print(x.grad)  # [20, 28]
-print(y.grad)  # [20, 28]
+print(x.grad)  # [14, 20]
+print(y.grad)  # [14, 20]
 ```
