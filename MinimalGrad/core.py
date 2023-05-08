@@ -3,30 +3,33 @@ from numba import njit
 
 
 class Tensor:
-    def __init__(self, data, requires_grad=False, dtype=np.float32):
-        self.data = np.array(data, dtype=dtype)
+    def __init__(self, data, requires_grad=False, _children=(), _dtype=np.float32):
+        self.data = np.array(data, dtype=_dtype)
         self.requires_grad = requires_grad
-        self.grad = None
-        self._grad_fn = None
+        self.grad = 0
+        self._backward = lambda: None
+        self._prev = set(_children)
         self.dim = self.data.ndim
 
     def to_array(self):
         return self.data
 
-    def backward(self, grad=None):
-        if not self.requires_grad:
-            return
+    def backward(self):
+        topological = []
+        visited = set()
 
-        if grad is None:
-            grad = np.ones_like(self.data, dtype=self.data.dtype)
+        def build_topological_order(node):
+            if node not in visited:
+                visited.add(node)
+                for child in node._prev:
+                    build_topological_order(child)
+                topological.append(node)
 
-        if self.grad is None:
-            self.grad = grad
-        else:
-            self.grad += grad
+        build_topological_order(self)
 
-        if self._grad_fn is not None:
-            self._grad_fn(self.grad)
+        self.grad = 1
+        for node in reversed(topological):
+            node._backward()
 
     def broadcast_to(self, shape):
         if self.shape == shape:
@@ -52,34 +55,52 @@ class Tensor:
         return Tensor(np.transpose(self.data, axes=axes), requires_grad=self.requires_grad)
 
     def __add__(self, other):
-        if isinstance(other, (int, float)):
-            other = np.array(other, dtype=self.data.dtype)
-            return Tensor(self.data + other, requires_grad=self.requires_grad)
-        return Tensor(self.data + other.to_array(), requires_grad=self.requires_grad or other.requires_grad)
+        other = other if isinstance(other, Tensor) else Tensor(np.array(other, dtype=self.data.dtype))
+        result = Tensor(self.data + other.data, requires_grad=self.requires_grad or other.requires_grad,
+                        _children=(self, other))
+
+        def _backward():
+            self.grad += result.grad
+            other.grad += result.grad
+
+        result._backward = _backward
+
+        return result
 
     def __mul__(self, other):
-        if isinstance(other, (int, float)):
-            other = np.array(other, dtype=self.data.dtype)
-            return Tensor(self.data * other, requires_grad=self.requires_grad)
-        return Tensor(self.data * other.to_array(), requires_grad=self.requires_grad or other.requires_grad)
+        other = other if isinstance(other, Tensor) else Tensor(np.array(other, dtype=self.data.dtype))
+        result = Tensor(self.data * other.data, requires_grad=self.requires_grad or other.requires_grad,
+                        _children=(self, other))
+
+        def _backward():
+            self.grad += other.data * result.grad
+            other.grad += self.data * result.grad
+
+        result._backward = _backward
+
+        return result
 
     def __truediv__(self, other):
-        if isinstance(other, (int, float)):
-            other = np.array(other, dtype=self.data.dtype)
-            return Tensor(self.data / other, requires_grad=self.requires_grad)
-        return Tensor(self.data / other.to_array(), requires_grad=self.requires_grad or other.requires_grad)
+        other = other if isinstance(other, Tensor) else Tensor(np.array(other, dtype=self.data.dtype))
+        return self * other**-1
 
     def __sub__(self, other):
-        if isinstance(other, (int, float)):
-            other = np.array(other, dtype=self.data.dtype)
-            return Tensor(self.data - other, requires_grad=self.requires_grad)
-        return Tensor(self.data - other.to_array(), requires_grad=self.requires_grad or other.requires_grad)
+        other = other if isinstance(other, Tensor) else Tensor(np.array(other, dtype=self.data.dtype))
+        return self + (-other)
 
     def __neg__(self):
-        return Tensor(-self.data, requires_grad=self.requires_grad)
+        return self * -1
 
     def __pow__(self, power):
-        return Tensor(np.power(self.data, power), requires_grad=self.requires_grad)
+        assert isinstance(power, (int, float)), "Supporting only int and float power for now."
+        result = Tensor(self.data ** power, _children=(self, ), _dtype=self.data.dtype)
+
+        def _backward():
+            self.grad += (power * self.data**(power-1)) * result.grad
+
+        result._backward = _backward
+
+        return result
 
     def __getitem__(self, index):
         return Tensor(self.data[index], requires_grad=self.requires_grad)
@@ -99,4 +120,3 @@ class Tensor:
     @njit
     def inverse(x):
         return np.linalg.inv(x)
-
