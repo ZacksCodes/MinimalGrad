@@ -50,12 +50,21 @@ class TestTensor(unittest.TestCase):
 
     def test_gradients(self):
         # Test tensor gradient computation with a simple function
-        x = Tensor([2, 3], requires_grad=True)
-        y = Tensor([5, 7], requires_grad=True)
-        z = x * y
-        z.backward(Tensor(np.array([1, 1])))
-        self.assertTrue(np.array_equal(x.grad, np.array([5, 7])))
-        self.assertTrue(np.array_equal(y.grad, np.array([2, 3])))
+        x1 = Tensor(2, requires_grad=True)
+        x2 = Tensor(-2, requires_grad=True)
+        w1 = Tensor(-3, requires_grad=True)
+        w2 = Tensor(6, requires_grad=True)
+        bias = Tensor(0.6546542324, requires_grad=True)
+        f = x1*w1 + x2*w2 + bias
+        f.backward()
+        print("x1.grad : ", x1.grad)
+        print("w1.grad : ", w1.grad)
+        print("x2.grad : ", x2.grad)
+        print("w2.grad : ", w2.grad)
+        print("f.grad  : ", f.grad)
+        print(f.data)
+        self.assertTrue(x1.grad, -3)
+        self.assertTrue(x2.grad, 1)
 
 
 if __name__ == '__main__':

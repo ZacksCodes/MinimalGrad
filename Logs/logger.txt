@@ -26,4 +26,11 @@ Optimized the performance:
  Added the UnitTest to test the results:
     - Creation Test : Passed
     - Arithmetic Operations test: Passed
-    - Gradient Test: To be finished 
+    - Gradient Test: To be finished
+
+
+ -- 09/05/2023 --
+ Gradient computation:
+    - Finished the computation of gradient for a given function or neural network
+    - Rewrite all the tensor numerical operations to support the gradient computation
+    - Updated the unittest for gradient
