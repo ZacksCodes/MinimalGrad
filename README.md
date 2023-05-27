@@ -23,11 +23,11 @@ pip install minimalgrad
 To use MinimalGrad, simply import the library and create a computation graph using the available operations. Here's a simple example:
 
 ```python
-import minimalgrad as mg
+from MinimalGrad.core import Tensor
 
 # Define variables
-x = mg.Tensor([2, 3])
-y = mg.Tensor([5, 7])
+x = Tensor([2, 3])
+y = Tensor([5, 7])
 
 # Define computation graph
 z = x + y
@@ -37,6 +37,6 @@ w = z * z
 w.backward()
 
 # Print gradients
-print(x.grad)  # [20, 28]
-print(y.grad)  # [20, 28]
+print(x.grad)  # [14, 20]
+print(y.grad)  # [14, 20]
 ```

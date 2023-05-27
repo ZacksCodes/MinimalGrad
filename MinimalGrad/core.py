@@ -98,6 +98,7 @@ class Tensor:
 
     def __pow__(self, power):
         assert isinstance(power, (int, float)), "Supporting only int and float power for now."
+
         result = Tensor(self.data ** power, _children=(self,), _op=f"^{power}"if power > 0 else f"/", _dtype=self.data.dtype)
 
         def _backward():
