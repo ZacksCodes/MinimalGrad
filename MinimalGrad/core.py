@@ -82,6 +82,9 @@ class Tensor:
 
         return result
 
+    def __rmul__(self, other):
+        return self * other
+
     def __truediv__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(np.array(other, dtype=self.data.dtype))
         return self * other ** -1
@@ -95,7 +98,7 @@ class Tensor:
 
     def __pow__(self, power):
         assert isinstance(power, (int, float)), "Supporting only int and float power for now."
-        result = Tensor(self.data ** power, _children=(self,), _op="power", _dtype=self.data.dtype)
+        result = Tensor(self.data ** power, _children=(self,), _op=f"^{power}"if power > 0 else f"/", _dtype=self.data.dtype)
 
         def _backward():
             self.grad += (power * self.data ** (power - 1)) * result.grad
